@@ -174,6 +174,12 @@ void deleteList(LinkedList *ll)
 
 void *search(LinkedList *ll, void *target, int (*compareFun)(void *, void *))
 {
+    if (isEmpty(ll))
+    {
+        printf("List is empty.\n");
+        return NULL;
+    }
+
     Node *current = ll->head;
     while (current != NULL)
     {
