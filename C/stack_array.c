@@ -5,59 +5,59 @@
 typedef struct StackArray
 {
     void *items[MAX_STACK_SIZE];
-    int current_size;
+    int currentSize;
 } StackArray;
 
 StackArray *createStackArray()
 {
     StackArray *newStack = malloc(sizeof(StackArray));
-    newStack->current_size = 0;
+    newStack->currentSize = 0;
     return newStack;
 }
 
 void push(StackArray *sa, void *item)
 {
-    if (sa->current_size == MAX_STACK_SIZE)
+    if (sa->currentSize == MAX_STACK_SIZE)
     {
         printf("Error: Stack overflow.\n");
         return;
     }
 
-    sa->items[sa->current_size++] = item;
+    sa->items[sa->currentSize++] = item;
 }
 
 void *pop(StackArray *sa)
 {
-    if (sa->current_size == 0)
+    if (sa->currentSize == 0)
     {
         printf("Error: Stack underflow.\n");
         return NULL;
     }
 
-    return sa->items[--sa->current_size];
+    return sa->items[--sa->currentSize];
 }
 
 void *peek(StackArray *sa)
 {
-    if (sa->current_size == 0)
+    if (sa->currentSize == 0)
     {
         printf("Stack is empty.\n");
         return NULL;
     }
 
-    return sa->items[sa->current_size - 1];
+    return sa->items[sa->currentSize - 1];
 }
 
 void printStackArray(StackArray *sa, void (*printFun)(void *))
 {
-    if (sa->current_size == 0)
+    if (sa->currentSize == 0)
     {
         printf("Stack is empty.\n");
         return;
     }
 
     printf("TOP\n");
-    for (int i = sa->current_size - 1; i >= 0; i--)
+    for (int i = sa->currentSize - 1; i >= 0; i--)
     {
         printFun(sa->items[i]);
         printf("\n");
