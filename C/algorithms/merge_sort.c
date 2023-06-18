@@ -1,14 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int compareInt(void *a, void *b)
-{
-    printf("   a=%d b=%d\n", *(int *)a, *(int *)b);
-    int res = *(int *)a - *(int *)b;
-    printf("compres=%d\n", res);
-    return res;
-}
-
 typedef struct Node Node;
 struct Node
 {
@@ -107,17 +99,9 @@ void printQueue(QueueList *ql, void (*printFun)(void *))
     printf(" LAST\n");
 }
 
-// Integer specific functions
-void printInt(void *item)
-{
-    printf("%d", *(int *)item);
-}
-
 void merge(void *a[], int start, int middle, int end,
            int (*compareFn)(void *, void *))
 {
-    printf("[MERGE]start[%d]=%d, middle[%d]=%d, end[%d]=%d\n",
-           start, *(int *)a[start], middle, *(int *)a[middle], end, *(int *)a[end]);
     QueueList *ql1 = createQueueList();
     QueueList *ql2 = createQueueList();
 
@@ -130,13 +114,9 @@ void merge(void *a[], int start, int middle, int end,
         enqueue(ql2, a[i]);
     }
 
-    printQueue(ql1, printInt);
-    printQueue(ql2, printInt);
-
     int j = start;
     while (!isEmpty(ql1) && !isEmpty(ql2))
     {
-        printf("HAHAHAHHA\n");
         if (compareFn(ql1->head->item, ql2->head->item) < 0)
         {
             a[j++] = dequeue(ql1);
@@ -155,25 +135,26 @@ void merge(void *a[], int start, int middle, int end,
     {
         a[j++] = dequeue(ql2);
     }
-    for (int i = 0; i < 5; i++)
-    {
-        printf("%d ", *(int *)a[i]);
-    }
-    printf("\n");
+
     free(ql1);
     free(ql2);
 }
 
-void mergeSort(void *a[], int start, int end)
+// Integer specific functions
+int compareInt(void *a, void *b)
 {
-    printf("start[%d]=%d, end[%d]=%d\n", start, *(int *)a[start], end, *(int *)a[end]);
+    return *(int *)a - *(int *)b;
+}
+
+void mergeSort(void *a[], int start, int end, int (*compareFn)(void *, void *))
+{
     if (start < end)
     {
         int middle = (start + end) / 2;
-        mergeSort(a, start, middle);
-        mergeSort(a, middle + 1, end);
+        mergeSort(a, start, middle, compareFn);
+        mergeSort(a, middle + 1, end, compareFn);
 
-        merge(a, start, middle, end, compareInt);
+        merge(a, start, middle, end, compareFn);
     }
 }
 
@@ -188,7 +169,7 @@ int main(void)
         varr[i] = (void *)&arr[i];
     }
 
-    mergeSort(varr, 0, aSize - 1);
+    mergeSort(varr, 0, aSize - 1, compareInt);
 
     for (int i = 0; i < aSize; i++)
     {
