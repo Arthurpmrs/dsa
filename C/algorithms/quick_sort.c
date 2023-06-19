@@ -106,5 +106,4 @@ int main(void)
         printf("%d ", *(int *)varr[i]);
     }
     return 0;
-    return 0;
 }

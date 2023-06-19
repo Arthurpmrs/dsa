@@ -1,0 +1,8 @@
+{ name: "Konosuba 2", year: 2017, score: 81 },
+{ name: "Takagi-san 2", year: 2019, score: 79 },
+{ name: "Kobayashi 1", year: 2017, score: 78 },
+{ name: "Nagatoro 1", year: 2021, score: 71 },
+{ name: "Kaguya-sama 1", year: 2019, score: 83 },
+{ name: "Non Non Biyori", year: 2013, score: 78 },
+{ name: "Call of the night", year: 2022, score: 79 },
+{ name: "Mob Psyco 100", year: 2016, score: 84 },
