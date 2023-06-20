@@ -63,7 +63,7 @@ int partition(void *a[], int start, int end, int (*compareFn)(void *, void *))
  * @brief Divide and conquer sorting algorithm based on recursion and element
  * swapping around an pivot volue.
  *
- * @param a array of void pointers to be sorted
+ * @param an array of void pointers to be sorted
  * @param start the subarray's first element index
  * @param end the subarray's last element index
  * @param compareFn a function that compares the target types. Must return a
