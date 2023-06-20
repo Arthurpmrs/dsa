@@ -23,15 +23,9 @@ void swap(void **a, void **b)
  */
 void selectionSort(int size, void *a[size], int (*comparingFn)(void *, void *))
 {
-
     int min;
     for (int i = 0; i < size - 1; i++)
     {
-        for (int k = 0; k < size; k++)
-        {
-            printf("%d ", *(int *)a[k]);
-        }
-        printf("\n");
         min = i;
         for (int j = i + 1; j < size; j++)
         {
