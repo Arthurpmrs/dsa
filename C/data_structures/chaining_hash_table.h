@@ -1,58 +1,57 @@
 #ifndef CHAINING_HASH_TABLE_H_
 #define CHAINING_HASH_TABLE_H_
 
-#define MAX_HASH_TABLE_SIZE 10
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
 
-typedef struct Element Element;
-struct Element
+typedef struct KVPair KVPair;
+struct KVPair
 {
-    void *key;
-    void *item;
-    Element *next;
+    char *key;
+    void *value;
+    KVPair *next;
 };
 
 typedef struct HashTable
 {
-    Element *table[MAX_HASH_TABLE_SIZE];
-    int count;
-    int _currentSize;
-    int _capacity;
+    KVPair **_table;
+    size_t _currentSize;
+    size_t _capacity;
+    void (*_printFn)(void *);
+    unsigned int (*_hashFn)(char *, size_t);
+    unsigned int count;
 } HashTable;
 
 /**
  * @brief Creates a new HashTable
  *
- * @return HashTable* a pointer to the HashTable
+ * @param size a size_t integer representing the capacity of the HashTable
+ * @param hashFn a hash function that takes a string and the table size
+ * @param printFn a function the prints to the console the desired type
+ * @return HashTable* a pointer to the created hashtable
  */
-HashTable *cht_create();
+HashTable *cht_create(size_t size, unsigned int (*hashFn)(char *, size_t),
+                      void (*printFn)(void *));
 
 /**
  * @brief Adds new [key, value] pair to the HashTable
  *
  * @param ht the pointer to the HashTable
- * @param key a void pointer to a key. Must be dynamically allocated
- * @param item a void pointer to a value.  Must be dynamically allocated
- * @param hashFn a hash function
- * @param compareKeyFn a function that compares the target types. Must return a
- * negative number when a < b, 0 when a == b and a positive value when a > b. If
- * both values are NULL, must return 0, if only one is NULL, must return -1
+ * @param key a string representing the key
+ * @param value a void pointer to a value
  */
-void cht_put(HashTable *ht, void *key, void *item, int (*hashFn)(void *),
-             int (*compareKeyFn)(void *, void *));
+bool cht_put(HashTable *ht, char *key, void *value);
 
 /**
  * @brief Retrieves a value given a key
  *
  * @param ht the pointer to the HashTable
- * @param key a void pointer to the desired key
- * @param hashFn a hash function
- * @param compareKeyFn a function that compares the target types. Must return a
- * negative number when a < b, 0 when a == b and a positive value when a > b. If
- * both values are NULL, must return 0, if only one is NULL, must return -1
+ * @param key a string representing the key
  * @return void* a void pointer to the desired value
  */
-void *cht_get(HashTable *ht, void *key, int (*hashFn)(void *),
-              int (*compareKeyFn)(void *, void *));
+void *cht_get(HashTable *ht, char *key);
 
 /**
  * @brief Removes a [key, value] pair and retrives the value given a key.
@@ -60,36 +59,26 @@ void *cht_get(HashTable *ht, void *key, int (*hashFn)(void *),
  * The key is freed together with the Element struct
  *
  * @param ht the pointer to the HashTable
- * @param key a void pointer to the key to be removed
- * @param hashFn a hash function
- * @param compareKeyFn a function that compares the target types. Must return a
- * negative number when a < b, 0 when a == b and a positive value when a > b. If
- * both values are NULL, must return 0, if only one is NULL, must return -1
+ * @param key a string representing the key
  * @return void* a void pointer to the value.
  */
-void *cht_pop(HashTable *ht, void *key, int (*hashFn)(void *),
-              int (*compareKeyFn)(void *, void *));
+void *cht_pop(HashTable *ht, char *key);
 
 /**
  * @brief Checks if a key is in the HashTable
  *
  * @param ht the pointer to the HashTable
  * @param key a void pointer to the key to be checked
- * @param hashFn a hash function
- * @param compareKeyFn a function that compares the target types. Must return a
- * negative number when a < b, 0 when a == b and a positive value when a > b. If
- * both values are NULL, must return 0, if only one is NULL, must return -1
- * @return int
+ * @return bool
  */
-int cht_containsKey(HashTable *ht, void *key, int (*hashFn)(void *),
-                    int (*compareKeyFn)(void *, void *));
+bool cht_containsKey(HashTable *ht, char *key);
 
 /**
  * @brief Remove all [key, value] pairs from the HashTable
  *
  * @param ht the pointer to the HashTable
  */
-void cht_clear(HashTable *ht);
+bool cht_clear(HashTable *ht);
 
 /**
  * @brief Completely dealocate the HashTable.
@@ -105,8 +94,7 @@ void *cht_erase(HashTable *ht);
  * @brief Pretty prints the HashTable
  *
  * @param ht the pointer to the HashTable
- * @param printFn a function the prints to the console the desired type
  */
-void cht_print(HashTable *ht, void (*printFn)(void *));
+void cht_print(HashTable *ht);
 
 #endif

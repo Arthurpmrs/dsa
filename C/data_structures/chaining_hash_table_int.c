@@ -2,26 +2,18 @@
 #include <stdlib.h>
 #include "chaining_hash_table.h"
 
-// Functions for int
-int hashInt(void *key)
+// Fowler-Noll-Vo hash function
+// https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function
+unsigned int hashFn(char *key, size_t size)
 {
-    return *(int *)key % MAX_HASH_TABLE_SIZE;
-}
-
-int compareInt(void *a, void *b)
-{
-    if (a != NULL && b != NULL)
+    unsigned int hash = 0x811c9dc5;
+    unsigned int prime = 0x01000193;
+    for (int i = 0; i < strlen(key); i++)
     {
-        return *(int *)a - *(int *)b;
+        hash = hash * prime;
+        hash = hash ^ key[i];
     }
-    else if (a == NULL && b == NULL)
-    {
-        return 0;
-    }
-    else
-    {
-        return -1;
-    }
+    return hash % size;
 }
 
 void printInt(void *item)
@@ -37,21 +29,16 @@ void printInt(void *item)
 }
 
 // Wrappers
-void put(HashTable *ht, int key, int value)
+void put(HashTable *ht, char *key, int value)
 {
-    int *pkey = malloc(sizeof(int));
-    *pkey = key;
     int *pvalue = malloc(sizeof(int));
     *pvalue = value;
-    cht_put(ht, (void *)pkey, (void *)pvalue, hashInt, compareInt);
+    cht_put(ht, key, (void *)pvalue);
 }
 
-int get(HashTable *ht, int key)
+int get(HashTable *ht, char *key)
 {
-    int *pkey = malloc(sizeof(int));
-    *pkey = key;
-    void *result = cht_get(ht, (void *)pkey, hashInt, compareInt);
-    free(pkey);
+    void *result = cht_get(ht, key);
     if (result == NULL)
     {
         return -1;
@@ -62,12 +49,9 @@ int get(HashTable *ht, int key)
     }
 }
 
-int pop(HashTable *ht, int key)
+int pop(HashTable *ht, char *key)
 {
-    int *pkey = malloc(sizeof(int));
-    *pkey = key;
-    void *presult = cht_pop(ht, (void *)pkey, hashInt, compareInt);
-    free(pkey);
+    void *presult = cht_pop(ht, key);
     if (presult == NULL)
     {
         return -1;
@@ -80,60 +64,46 @@ int pop(HashTable *ht, int key)
     }
 }
 
-int containsKey(HashTable *ht, int key)
-{
-    int *pkey = malloc(sizeof(int));
-    *pkey = key;
-    int result = cht_containsKey(ht, (void *)pkey, hashInt, compareInt);
-    free(pkey);
-    return result;
-}
-
 void print(HashTable *ht)
 {
-    cht_print(ht, printInt);
-    printf("Count=>%d, size=>%d, capacity=>%d\n",
+    cht_print(ht);
+    printf("Count=>%d, size=>%ld, capacity=>%ld\n",
            ht->count, ht->_currentSize, ht->_capacity);
 }
 
 int main(void)
 {
-    HashTable *ht = cht_create();
-    put(ht, 1, 6000);
-    put(ht, 15, 4000);
-    put(ht, 7, 4000);
-    put(ht, 8, 250);
-    put(ht, 20, 500);
-    put(ht, 10, 1000);
-    put(ht, 11, 7888);
-    put(ht, 28, 788);
-    put(ht, 21, 78);
-    put(ht, 31, 2000);
+    HashTable *ht = cht_create(12, hashFn, printInt);
+
+    put(ht, "1", 6000);
+    put(ht, "15", 4000);
+    put(ht, "7", 4000);
+    put(ht, "8", 250);
+    put(ht, "20", 500);
+    put(ht, "10", 1000);
+    put(ht, "11", 7888);
+    put(ht, "28", 788);
+    put(ht, "21", 78);
+    put(ht, "31", 2000);
+    put(ht, "99", 99999);
     print(ht);
 
     printf("----- Gets ----\n");
-    printf("get(%d)=%d\n", 3, get(ht, 3));
-    printf("get(%d)=%d\n", 20, get(ht, 20));
-    printf("get(%d)=%d\n", 99, get(ht, 99));
+    printf("get(%s)=%d\n", "3", get(ht, "3"));
+    printf("get(%s)=%d\n", "20", get(ht, "20"));
+    printf("get(%s)=%d\n", "99", get(ht, "99"));
 
     printf("----- Pops ----\n");
-    printf("pop(%d)=%d\n", 15, pop(ht, 15));
-    print(ht);
-    printf("pop(%d)=%d\n", 99, pop(ht, 99));
-    print(ht);
-    printf("pop(%d)=%d\n", 1, pop(ht, 1));
-    print(ht);
-    printf("pop(%d)=%d\n", 11, pop(ht, 11));
-    print(ht);
-    printf("pop(%d)=%d\n", 31, pop(ht, 31));
-    print(ht);
-    printf("pop(%d)=%d\n", 21, pop(ht, 21));
+    printf("pop(%s)=%d\n", "99", pop(ht, "11"));
+    printf("pop(%s)=%d\n", "99", pop(ht, "8"));
+    printf("pop(%s)=%d\n", "99", pop(ht, "99"));
+    printf("pop(%s)=%d\n", "7", pop(ht, "7"));
+    printf("pop(%s)=%d\n", "32", pop(ht, "32"));
     print(ht);
 
-    printf("contains key=%d? %s\n", 31, (containsKey(ht, 31) ? "Yes" : "No"));
-    printf("contains key=%d? %s\n", 99, (containsKey(ht, 99) ? "Yes" : "No"));
+    printf("contains key=%s? %s\n", "32", (cht_containsKey(ht, "32") ? "Yes" : "No"));
+    printf("contains key=%s? %s\n", "99", (cht_containsKey(ht, "99") ? "Yes" : "No"));
 
-    cht_clear(ht);
-
-    print(ht);
+    ht = cht_erase(ht);
+    // print(ht);
 }

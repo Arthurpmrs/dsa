@@ -1,41 +1,62 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include "chaining_hash_table.h"
 
-#define MAX_HASH_TABLE_SIZE 10
 // Dynamic sized: https://codereview.stackexchange.com/questions/254854/hashtable-with-separate-chaining-and-dynamic-resizing?newreg=539d2e7c60bf4823836bcb387be1088c
 // Hash functions: https://en.wikipedia.org/wiki/List_of_hash_functions#Non-cryptographic_hash_functions
-HashTable *cht_create()
+HashTable *cht_create(size_t size, unsigned int (*hashFn)(char *, size_t),
+                      void (*printFn)(void *))
 {
     HashTable *ht = malloc(sizeof(HashTable));
-    for (int i = 0; i < MAX_HASH_TABLE_SIZE; i++)
+
+    if (ht == NULL)
     {
-        ht->table[i] = NULL;
+        exit(EXIT_FAILURE);
     }
-    ht->count = 0;
+
+    KVPair **table = calloc(sizeof(KVPair), size);
+
+    if (table == NULL)
+    {
+        free(ht);
+        exit(EXIT_FAILURE);
+    }
+
+    ht->_table = table;
     ht->_currentSize = 0;
-    ht->_capacity = MAX_HASH_TABLE_SIZE;
+    ht->_capacity = size;
+    ht->_hashFn = hashFn;
+    ht->_printFn = printFn;
+    ht->count = 0;
     return ht;
 }
 
-void cht_put(HashTable *ht, void *key, void *item, int (*hashFn)(void *),
-             int (*compareKeyFn)(void *, void *))
+bool cht_put(HashTable *ht, char *key, void *value)
 {
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+
     if (ht->_currentSize == ht->_capacity)
     {
         printf("Hash overflow\n");
-        return;
+        return false;
     }
 
-    int h = hashFn(key);
+    if (key == NULL || value == NULL)
+    {
+        return false;
+    }
 
-    Element *current = ht->table[h];
-    Element *prev = NULL;
+    unsigned h = ht->_hashFn(key, ht->_capacity);
+
+    KVPair *current = ht->_table[h];
+    KVPair *prev = NULL;
     while (current != NULL)
     {
-        if (compareKeyFn(current->key, key) == 0)
+        // Updates the value on a existing key
+        if (strcmp(current->key, key) == 0)
         {
-            current->item = item;
+            current->value = value;
             break;
         }
         prev = current;
@@ -44,33 +65,51 @@ void cht_put(HashTable *ht, void *key, void *item, int (*hashFn)(void *),
 
     if (current == NULL)
     {
-        Element *newElement = malloc(sizeof(Element));
-        newElement->item = item;
-        newElement->key = key;
-        newElement->next = NULL;
+        KVPair *newPair = malloc(sizeof(KVPair));
+
+        // Taking ownership of the key memory
+        newPair->key = malloc(strlen(key) + 1);
+        strcpy(newPair->key, key);
+
+        // Note: THe ownership of the value belongs to the caller
+        newPair->value = value;
+        newPair->next = NULL;
+
         if (prev == NULL)
         {
-            ht->table[h] = newElement;
+            ht->_table[h] = newPair;
             ht->_currentSize++;
         }
         else
         {
-            prev->next = newElement;
+            prev->next = newPair;
         }
         ht->count++;
     }
+
+    return true;
 }
 
-void *cht_get(HashTable *ht, void *key, int (*hashFn)(void *),
-              int (*compareKeyFn)(void *, void *))
+void *cht_get(HashTable *ht, char *key)
 {
-    int h = hashFn(key);
-    Element *current = ht->table[h];
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    if (key == NULL)
+    {
+        return NULL;
+    }
+
+    unsigned int h = ht->_hashFn(key, ht->_capacity);
+
+    KVPair *current = ht->_table[h];
     while (current != NULL)
     {
-        if (compareKeyFn(current->key, key) == 0)
+        if (strcmp(current->key, key) == 0)
         {
-            return current->item;
+            return current->value;
         }
         current = current->next;
     }
@@ -78,110 +117,146 @@ void *cht_get(HashTable *ht, void *key, int (*hashFn)(void *),
     return NULL;
 }
 
-void *cht_pop(HashTable *ht, void *key, int (*hashFn)(void *),
-              int (*compareKeyFn)(void *, void *))
+void *cht_pop(HashTable *ht, char *key)
 {
-    int h = hashFn(key);
-    Element *current = ht->table[h];
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
 
+    if (key == NULL)
+    {
+        return NULL;
+    }
+
+    unsigned int h = ht->_hashFn(key, ht->_capacity);
+
+    KVPair *current = ht->_table[h];
+    KVPair *prev = NULL;
+
+    while (current != NULL)
+    {
+        if (strcmp(current->key, key) == 0)
+        {
+            break;
+        }
+        prev = current;
+        current = current->next;
+    }
+    // If the key is not found
     if (current == NULL)
     {
         return NULL;
     }
 
-    if (compareKeyFn(current->key, key) == 0)
+    void *value = current->value;
+    ht->count--;
+
+    // The found key if the first
+    if (prev == NULL)
     {
-        Element *DHead = current;
-        void *item = DHead->item;
-        ht->table[h] = current->next;
-        free(DHead->key);
-        free(DHead);
-        ht->count--;
-        if (ht->table[h] == NULL)
+        ht->_table[h] = current->next;
+
+        // The spot if now empty
+        if (ht->_table[h] == NULL)
         {
             ht->_currentSize--;
         }
-        return item;
     }
     else
     {
-        while (current->next != NULL)
-        {
-            if (compareKeyFn(current->next->key, key) == 0)
-            {
-                Element *DHead = current->next;
-                void *item = DHead->item;
-
-                current->next = current->next->next;
-                free(DHead->key);
-                free(DHead);
-                ht->count--;
-
-                return item;
-            }
-            current = current->next;
-        }
+        prev->next = current->next;
     }
 
-    return NULL;
+    free(current->key);
+    free(current);
+
+    return value;
 }
 
-int cht_containsKey(HashTable *ht, void *key, int (*hashFn)(void *),
-                    int (*compareKeyFn)(void *, void *))
+bool cht_containsKey(HashTable *ht, char *key)
 {
-    int h = hashFn(key);
-    Element *current = ht->table[h];
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+
+    if (key == NULL)
+    {
+        return false;
+    }
+
+    unsigned int h = ht->_hashFn(key, ht->_capacity);
+
+    KVPair *current = ht->_table[h];
     while (current != NULL)
     {
-        if (compareKeyFn(current->key, key) == 0)
+        if (strcmp(current->key, key) == 0)
         {
-            return 1;
+            return true;
         }
         current = current->next;
     }
-    return 0;
+    return false;
 }
 
-void cht_clear(HashTable *ht)
+bool cht_clear(HashTable *ht)
 {
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < ht->_capacity; i++)
     {
-        Element *current = ht->table[i];
+        KVPair *current = ht->_table[i];
         while (current != NULL)
         {
-            Element *DHead = current;
+            KVPair *tmp = current;
             current = current->next;
-            free(DHead->key);
-            free(DHead->item);
-            free(DHead);
+
+            free(tmp->key);
+            free(tmp->value);
+            free(tmp);
         }
-        ht->table[i] = NULL;
+        ht->_table[i] = NULL;
     }
+
     ht->count = 0;
     ht->_currentSize = 0;
+
+    return true;
 }
 
 void *cht_erase(HashTable *ht)
 {
+    if (ht == NULL)
+    {
+        exit(EXIT_FAILURE);
+    }
+
     cht_clear(ht);
+
+    free(ht->_table);
     free(ht);
+
     return NULL;
 }
 
-void cht_print(HashTable *ht, void (*printFn)(void *))
+void cht_print(HashTable *ht)
 {
     printf("{");
-    for (int i = 0; i < MAX_HASH_TABLE_SIZE; i++)
+    for (int i = 0; i < ht->_capacity; i++)
     {
-        if (ht->table[i] != NULL)
+        if (ht->_table[i] != NULL)
         {
-            Element *current = ht->table[i];
+            KVPair *current = ht->_table[i];
             printf("[");
             while (current != NULL)
             {
-                printFn(current->key);
+                printf("\"%s\"", current->key);
                 printf(": ");
-                printFn(current->item);
+                ht->_printFn(current->value);
                 if (current->next != NULL)
                 {
                     printf(", ");
@@ -195,7 +270,7 @@ void cht_print(HashTable *ht, void (*printFn)(void *))
             printf("nil: nil");
         }
 
-        if (i != MAX_HASH_TABLE_SIZE - 1)
+        if (i != ht->_capacity - 1)
         {
             printf(", ");
         }
