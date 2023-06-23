@@ -44,6 +44,8 @@ void put(HashTable *ht, void *key, void *item, int (*hashFn)(void *),
             ht->table[h]->item = item;
             break;
         }
+        // if the key is NULL, the element previously here was deleted, so we
+        // can overwrite it.
         else if (ht->table[h]->key == NULL)
         {
             ht->table[h]->item = item;
