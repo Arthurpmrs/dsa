@@ -35,6 +35,37 @@ void bubbleSort(int size, void *a[size], int (*comparingFn)(void *, void *))
     }
 }
 
+/**
+ * @brief Bubble sort sorting algorithm implementation, but with O(n) complexity
+ * for already sorted arrays.
+ *
+ * @param size an integer representing the size of the array
+ * @param a an array of void pointers to be sorted
+ * @param comparingFn a function that compares the target types. Must return a
+ * negative number when a < b, 0 when a == b and a positive value when a > b
+ */
+void bubbleSort2(int size, void *a[size], int (*comparingFn)(void *, void *))
+{
+
+    for (int j = size - 1; j >= 0; j--)
+    {
+        int switches = 0;
+        for (int i = 0; i < j; i++)
+        {
+            printf("(j, i)=(%d, %d)\n", j, i);
+            if (comparingFn(a[i], a[i + 1]) > 0)
+            {
+                switches++;
+                swap(&a[i], &a[i + 1]);
+            }
+        }
+        if (switches == 0)
+        {
+            return;
+        }
+    }
+}
+
 // Integer specific functions
 int compareInt(void *a, void *b)
 {
@@ -48,7 +79,8 @@ int main(void)
     // int arr[7] = {1, 10, 0, 1, 0, 1, 10};
     // int arr[7] = {0, 5, 2, 1, 6, 3, 0};
     int aSize = 10;
-    int arr[10] = {45, 87, 1, 78, 12, 1, 0, 47, 45, 0};
+    // int arr[10] = {45, 87, 1, 78, 12, 1, 0, 47, 45, 0};
+    int arr[10] = {20, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
     void *varr[aSize];
     for (int i = 0; i < aSize; i++)
@@ -56,7 +88,7 @@ int main(void)
         varr[i] = (void *)&arr[i];
     }
 
-    bubbleSort(aSize, varr, compareInt);
+    bubbleSort2(aSize, varr, compareInt);
 
     for (int i = 0; i < aSize; i++)
     {

@@ -63,7 +63,7 @@ int partition(void *a[], int start, int end, int (*compareFn)(void *, void *))
  * @brief Divide and conquer sorting algorithm based on recursion and element
  * swapping around an pivot volue.
  *
- * @param an array of void pointers to be sorted
+ * @param a an array of void pointers to be sorted
  * @param start the subarray's first element index
  * @param end the subarray's last element index
  * @param compareFn a function that compares the target types. Must return a
@@ -79,6 +79,57 @@ void quickSort(void *a[], int start, int end, int (*compareFn)(void *, void *))
     }
 }
 
+/**
+ * @brief Divide and conquer sorting algorithm based on recursion and element
+ * swapping around an pivot volue.
+ *
+ * @param a an array of void pointers to be sorted
+ * @param size the subarray's size
+ * @param compareFn a function that compares the target types. Must return a
+ * negative number when a < b, 0 when a == b and a positive value when a > b
+ */
+void quickSort2(void *a[], int size, int (*compareFn)(void *, void *))
+{
+    if (size <= 1)
+    {
+        return;
+    }
+    else
+    {
+        int start = 0;
+        int end = size - 1;
+        int pIndex = size / 2;
+        void *pivot = a[pIndex];
+
+        while (start < end)
+        {
+            while (compareFn(a[start], pivot) <= 0 && start < pIndex)
+            {
+                start++;
+            }
+            while (compareFn(a[end], pivot) >= 0 && end > pIndex)
+            {
+                end--;
+            }
+
+            if (start < end)
+            {
+                if (end == pIndex)
+                {
+                    pIndex = start;
+                }
+                else if (start == pIndex)
+                {
+                    pIndex = end;
+                }
+                swap(&a[start], &a[end]);
+            }
+        }
+        quickSort2(a, end, compareFn);
+        quickSort2(a + start, size - start, compareFn);
+    }
+}
+
 // Integer specific functions
 int compareInt(void *a, void *b)
 {
@@ -87,11 +138,11 @@ int compareInt(void *a, void *b)
 
 int main(void)
 {
-    int aSize = 10;
-    // int arr[7] = {2, 5, 1, 0, 1, 3, 8};
+    int aSize = 7;
+    int arr[7] = {12, 15, 11, 10, 11, 13, 18};
     // int arr[7] = {1, 10, 0, 1, 0, 1, 10};
-    // int arr[7] = {0, 5, 2, 1, 6, 3, 0};
-    int arr[10] = {45, 87, 1, 78, 12, 1, 0, 47, 45, 0};
+    // int arr[10] = {42, 87, 2, 78, 12, 1, 0, 47, 45, 3};
+    // int arr[10] = {45, 87, 1, 78, 12, 1, 0, 47, 45, 0};
 
     void *varr[aSize];
     for (int i = 0; i < aSize; i++)
@@ -99,7 +150,8 @@ int main(void)
         varr[i] = (void *)&arr[i];
     }
 
-    quickSort(varr, 0, aSize - 1, compareInt);
+    // quickSort(varr, 0, aSize - 1, compareInt);
+    quickSort2(varr, aSize, compareInt);
 
     for (int i = 0; i < aSize; i++)
     {
