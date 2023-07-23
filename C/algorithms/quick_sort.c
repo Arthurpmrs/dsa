@@ -130,6 +130,40 @@ void quickSort2(void *a[], int size, int (*compareFn)(void *, void *))
     }
 }
 
+void quickSort3(void *a[], int leftIndex, int rightIndex,
+                int (*compareFn)(void *, void *))
+{
+    if (leftIndex >= rightIndex)
+    {
+        return;
+    }
+
+    int left = leftIndex;
+    int right = rightIndex;
+    void *pivot = a[(leftIndex + rightIndex) / 2];
+
+    while (left <= right)
+    {
+        while (compareFn(a[left], pivot) < 0)
+        {
+            left++;
+        }
+        while (compareFn(a[right], pivot) > 0)
+        {
+            right--;
+        }
+
+        if (left <= right)
+        {
+            swap(&a[left], &a[right]);
+            left++;
+            right--;
+        }
+    }
+    quickSort3(a, leftIndex, right, compareFn);
+    quickSort3(a, left, rightIndex, compareFn);
+}
+
 // Integer specific functions
 int compareInt(void *a, void *b)
 {
@@ -139,8 +173,19 @@ int compareInt(void *a, void *b)
 int main(void)
 {
     int aSize = 7;
-    int arr[7] = {12, 15, 11, 10, 11, 13, 18};
-    // int arr[7] = {1, 10, 0, 1, 0, 1, 10};
+    // int arr[7] = {12, 15, 11, 10, 11, 13, 18};
+    // int arr[7] = {0, 0, 0, 0, 0, 0, 0};
+    // int arr[7] = {0, 0, 0, 1, 0, 0, 0};
+    // int arr[7] = {1, 1, 1, 0, 1, 1, 1};
+    // int arr[7] = {3, 2, 1, 0, 1, 2, 3};
+    // int arr[7] = {13, 21, 10, 10, 15, 20, 3};
+    // int arr[7] = {100, 90, 80, 70, 50, 20, 5};
+    // int arr[7] = {100, 90, 80, 1000, 50, 20, 5};
+    // int arr[7] = {100, 90, 80, 5, 50, 20, 5};
+    // int arr[7] = {100, 90, 80, 0, 50, 20, 5};
+    // int arr[7] = {0, 1, 2, 0, 3, 5, 5};
+    // int arr[7] = {0, 1, 2, 3, 4, 5, 6};
+    int arr[7] = {1, 10, 0, 1, 0, 1, 10};
     // int arr[10] = {42, 87, 2, 78, 12, 1, 0, 47, 45, 3};
     // int arr[10] = {45, 87, 1, 78, 12, 1, 0, 47, 45, 0};
 
@@ -149,8 +194,12 @@ int main(void)
     {
         varr[i] = (void *)&arr[i];
     }
-
-    // quickSort(varr, 0, aSize - 1, compareInt);
+    for (int i = 0; i < aSize; i++)
+    {
+        printf("%d ", *(int *)varr[i]);
+    }
+    printf("\n");
+    // quickSort3(varr, 0, aSize - 1, compareInt);
     quickSort2(varr, aSize, compareInt);
 
     for (int i = 0; i < aSize; i++)
